@@ -7,15 +7,16 @@ defmodule Teacher.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      # Starts a worker by calling: Teacher.Worker.start_link(arg)
-      # {Teacher.Worker, arg}
-      {Teacher.CoinDataWorker, %{}}
-    ]
-
+    children = get_children()
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Teacher.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp get_children do
+    Enum.map([:bitcoin, :ethereum, :xrp], fn coin ->
+      Supervisor.child_spec({Teacher.CoinDataWorker, %{id: coin}}, id: coin)
+    end)
   end
 end

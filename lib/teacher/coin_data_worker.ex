@@ -1,5 +1,6 @@
 defmodule Teacher.CoinDataWorker do
   use GenServer
+  alias Teacher.CoinData
 
   def start_link(args) do
     id = Map.get(args, :id)
@@ -15,7 +16,7 @@ defmodule Teacher.CoinDataWorker do
     updated_state =
       state
       |> Map.get(:id)
-      |> coin_data()
+      |> CoinData.fetch()
       |> update_state(state)
 
     if updated_state[:price] != state[:price] do
@@ -28,14 +29,6 @@ defmodule Teacher.CoinDataWorker do
 
   defp update_state(%{"id" => name, "priceUsd" => price}, existing_state) do
     Map.merge(existing_state, %{name: name, price: price})
-  end
-
-  defp coin_data(id) do
-    "https://api.coincap.io/v2/assets/#{id}"
-    |> HTTPoison.get!()
-    |> Map.get(:body)
-    |> Jason.decode!()
-    |> Map.get("data")
   end
 
   defp schedule_coin_fetch() do
